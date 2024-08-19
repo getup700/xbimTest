@@ -1,35 +1,30 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xbim.Common;
-using Xbim.Ifc;
-using Xbim.Ifc4;
-using Xbim.IO;
-using Xbim.Ifc4.Interfaces;
 using Xbim.Common.Step21;
-using Xbim.Common.Metadata;
-using Xbim.Ifc4.SharedBldgElements;
-using Xbim.Ifc4.Kernel;
-using Xbim.Ifc4.PropertyResource;
-using Xbim.Ifc4.MeasureResource;
-using System.Diagnostics;
-using Xbim.Ifc4.ProductExtension;
-using Xbim.Ifc4.GeometricConstraintResource;
-using Xbim.Ifc4.GeometryResource;
-using Xbim.Ifc4.MaterialResource;
-using Xbim.Ifc4.ExternalReferenceResource;
-using Xbim.Ifc4.DateTimeResource;
+using Xbim.Ifc;
 using Xbim.Ifc4.ActorResource;
-using Xbim.Ifc4.QuantityResource;
-using System.IO;
-using Xbim.Ifc4.RepresentationResource;
-using Xbim.Ifc4.ProfileResource;
-using Xbim.Ifc4.PresentationOrganizationResource;
+using Xbim.Ifc4.DateTimeResource;
+using Xbim.Ifc4.ExternalReferenceResource;
+using Xbim.Ifc4.GeometricConstraintResource;
 using Xbim.Ifc4.GeometricModelResource;
+using Xbim.Ifc4.GeometryResource;
+using Xbim.Ifc4.Interfaces;
+using Xbim.Ifc4.Kernel;
+using Xbim.Ifc4.MaterialResource;
+using Xbim.Ifc4.MeasureResource;
+using Xbim.Ifc4.PresentationOrganizationResource;
+using Xbim.Ifc4.ProductExtension;
+using Xbim.Ifc4.ProfileResource;
+using Xbim.Ifc4.PropertyResource;
+using Xbim.Ifc4.QuantityResource;
+using Xbim.Ifc4.RepresentationResource;
+using Xbim.Ifc4.SharedBldgElements;
+using Xbim.Ifc4.UtilityResource;
+using Xbim.IO;
 using xbimTest.Extensions;
-using Microsoft.Extensions.Logging;
 
 namespace xbimTest.Services;
 
@@ -44,8 +39,37 @@ internal class WallService
         this.logger = logger;
     }
 
+    public void BuildNewProject(string fullFileName)
+    {
+        var store = IfcStore.Create(XbimSchemaVersion.Ifc4, XbimStoreType.InMemoryModel);
+        store.NewTransaction(store =>
+        {
+            var app = store.Instances.New<IfcApplication>();
+            app.ApplicationIdentifier = "xbimTest";
+            app.ApplicationFullName = "fullFileName";
+            
+
+            var persionAndOrg = store.Instances.New<IfcPersonAndOrganization>();
+
+            var org = store.Instances.New<IfcOrganization>();
+            org.Identification = "my org";
+            persionAndOrg.TheOrganization = org;
+
+            var person = store.Instances.New<IfcPerson>();
+            person.Identification = "Omar";
+            persionAndOrg.ThePerson = person;
+    
+            app.ApplicationDeveloper = org;
+
+            
+        });
+        store.SaveAs(fullFileName);
+    }
+
+
     public void BuildingSimpleIfcProject(string fullFileName)
     {
+        logger.LogDebug(fullFileName);
         //create model
         using var model = CreateandInitModel("HelloWall");
         if (model == null)

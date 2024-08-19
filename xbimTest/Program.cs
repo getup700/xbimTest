@@ -1,32 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Diagnostics;
-using System.Linq;
-using Xbim.Common;
-using Xbim.Common.Step21;
-using Xbim.Ifc;
-using Xbim.IO;
-using Xbim.Ifc4.ActorResource;
-using Xbim.Ifc4.DateTimeResource;
-using Xbim.Ifc4.ExternalReferenceResource;
-using Xbim.Ifc4.PresentationOrganizationResource;
-using Xbim.Ifc4.GeometricConstraintResource;
-using Xbim.Ifc4.GeometricModelResource;
-using Xbim.Ifc4.GeometryResource;
-using Xbim.Ifc4.Interfaces;
-using Xbim.Ifc4.Kernel;
-using Xbim.Ifc4.MaterialResource;
-using Xbim.Ifc4.MeasureResource;
-using Xbim.Ifc4.ProductExtension;
-using Xbim.Ifc4.ProfileResource;
-using Xbim.Ifc4.PropertyResource;
-using Xbim.Ifc4.QuantityResource;
-using Xbim.Ifc4.RepresentationResource;
-using Xbim.Ifc4.SharedBldgElements;
 using System.IO;
-using Microsoft.Extensions.DependencyInjection;
+using Xbim.Ifc;
 using xbimTest.Services;
-
+using xbimTest.ViewModels;
 
 namespace xbimTest;
 
@@ -35,7 +14,11 @@ class Program
     static void Main()
     {
         var services = new ServiceCollection();
-        services.AddLogging();
+
+        services.AddLogging(config =>
+        {
+            config.AddConsole().SetMinimumLevel(LogLevel.Trace);
+        });
 
         services.AddSingleton(new XbimEditorCredentials()
         {
@@ -49,15 +32,26 @@ class Program
         });
         services.AddSingleton<WallService>();
         services.AddSingleton<DemoService>();
+        services.AddSingleton<LinqService>();
+        services.AddSingleton<TransferService>();
+        services.AddSingleton<ProjectHierarchyService>();
 
-
+        services.AddSingleton<LinqViewModel>();
 
 
         var provider = services.BuildServiceProvider();
-        var service = provider.GetService<WallService>();
-        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "ifcDemo.ifc");
+        var transferService = provider.GetService<TransferService>();
 
-        service.BuildingSimpleIfcProject(path);
+        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "武汉台北路万象城.ifc");
+        var exportPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "武汉台北路万象城.xlsx");
+        //transferService.Export(path, exportPath);
+
+
+        var projectHierarchyService = provider.GetService<ProjectHierarchyService>();
+        //projectHierarchyService.Show(path);
+
+        var wallService = provider.GetService<WallService>();
+        wallService.BuildNewProject(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "newProject.ifc"));
 
     }
 }

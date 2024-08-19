@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xbim.Common;
+﻿using Xbim.Common;
 using Xbim.Common.Step21;
 using Xbim.Ifc;
 using Xbim.Ifc4.Kernel;
@@ -17,16 +12,16 @@ namespace xbimTest.Services
     internal class DemoService
     {
 
-        private readonly XbimEditorCredentials editor;
+        private readonly XbimEditorCredentials credentials;
 
-        public DemoService(XbimEditorCredentials editor)
+        public DemoService(XbimEditorCredentials credentials)
         {
-            this.editor = editor;
+            this.credentials = credentials;
         }
 
         public void Create(string path)
         {
-            using var model = IfcStore.Create(editor, XbimSchemaVersion.Ifc4, XbimStoreType.InMemoryModel);
+            using var model = IfcStore.Create(credentials, XbimSchemaVersion.Ifc4, XbimStoreType.InMemoryModel);
             using var txn = model.BeginTransaction();
             //创建模型前应该先创建项目
             var project = model.Instances.New<IfcProject>(p => p.Name = "Basic Creation");
