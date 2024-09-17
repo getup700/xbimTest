@@ -37,14 +37,31 @@ class Program
         services.AddSingleton<ProjectHierarchyService>();
 
         services.AddSingleton<LinqViewModel>();
+        services.AddSingleton<ProjectService>();
+        services.AddSingleton<MainViewModel>();
 
 
         var provider = services.BuildServiceProvider();
-        var transferService = provider.GetService<TransferService>();
 
         var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "武汉台北路万象城.ifc");
         var exportPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "武汉台北路万象城.xlsx");
+
+        var main = provider.GetService<MainViewModel>();
+        while (true)
+        {
+            var prompt = Console.ReadLine();
+            main.Run(prompt);
+        }
+
+
+
+
+
+
         //transferService.Export(path, exportPath);
+
+        var transferService = provider.GetService<TransferService>();
+
 
 
         var projectHierarchyService = provider.GetService<ProjectHierarchyService>();
