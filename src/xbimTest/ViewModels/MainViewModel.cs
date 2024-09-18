@@ -11,12 +11,14 @@ namespace xbimTest.ViewModels
     internal class MainViewModel
     {
         ProjectService projectService;
+        SimpleProjectService wallService;
         string path;
 
-        public MainViewModel(ProjectService projectService)
+        public MainViewModel(ProjectService projectService, SimpleProjectService wallService)
         {
-            path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "武汉台北路万象城.ifc");
+            path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "HELLO.ifc");
             this.projectService = projectService;
+            this.wallService = wallService;
         }
 
         public void Run(string prompt)
@@ -27,13 +29,15 @@ namespace xbimTest.ViewModels
             switch (prompt)
             {
                 case "createstore":
-                    var store = projectService.CreateStore();
-                    store.SaveAs(path);
+                    var store = projectService.CreateStore("NewProject");
+                    projectService.Save(store, path);
+                    break;
+                case "helloifc":
+                    wallService.BuildingSimpleIfcProject(path); 
                     break;
                 default:
                     result += "Invalid prompt words...";
                     break;
-
             }
             Console.WriteLine(result);
         }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Xbim.Common;
 using Xbim.Common.Step21;
@@ -22,63 +23,36 @@ using Xbim.Ifc4.PropertyResource;
 using Xbim.Ifc4.QuantityResource;
 using Xbim.Ifc4.RepresentationResource;
 using Xbim.Ifc4.SharedBldgElements;
-using Xbim.Ifc4.UtilityResource;
 using Xbim.IO;
 using xbimTest.Extensions;
 
 namespace xbimTest.Services;
 
-internal class WallService
+/// <summary>
+/// 创建一个ifc示例项目，项目包含一面墙
+/// </summary>
+internal class SimpleProjectService
 {
-    private readonly XbimEditorCredentials credentials;
-    private ILogger<WallService> logger;
+    private readonly ILogger<SimpleProjectService> logger;
 
-    public WallService(XbimEditorCredentials credentials, ILogger<WallService> logger)
+    public SimpleProjectService(ILogger<SimpleProjectService> logger)
     {
-        this.credentials = credentials;
         this.logger = logger;
     }
 
-    public void BuildNewProject(string fullFileName)
+    public void BuildingSimpleIfcProject(string fullFileName = null)
     {
-        var store = IfcStore.Create(XbimSchemaVersion.Ifc4, XbimStoreType.InMemoryModel);
-        store.NewTransaction(store =>
-        {
-            var app = store.Instances.New<IfcApplication>();
-            app.ApplicationIdentifier = "xbimTest";
-            app.ApplicationFullName = "fullFileName";
-            
-
-            var persionAndOrg = store.Instances.New<IfcPersonAndOrganization>();
-
-            var org = store.Instances.New<IfcOrganization>();
-            org.Identification = "my org";
-            persionAndOrg.TheOrganization = org;
-
-            var person = store.Instances.New<IfcPerson>();
-            person.Identification = "Omar";
-            persionAndOrg.ThePerson = person;
-    
-            app.ApplicationDeveloper = org;
-
-            
-        });
-        store.SaveAs(fullFileName);
-    }
-
-
-    public void BuildingSimpleIfcProject(string fullFileName)
-    {
+        fullFileName ??= Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "HelloIfcProject.ifc");
         logger.LogDebug(fullFileName);
         //create model
-        using var model = CreateandInitModel("HelloWall");
+        using var model = CreateAndInitModel("HelloProject");
         if (model == null)
         {
             return;
         }
 
         //create building
-        var building = CreateBuilding(model, "Default Building");
+        var building = CreateBuilding(model, "HelloBuilding");
 
         //create wall
         var wall = CreateWall(model, 4000, 300, 2400);
@@ -104,7 +78,7 @@ internal class WallService
         }
         catch (Exception e)
         {
-            logger.LogError("Failed to save HelloWall.ifc");
+            logger.LogError("Failed to save HelloIfc.ifc");
             logger.LogError(e.Message);
         }
 
@@ -138,7 +112,7 @@ internal class WallService
     /// </summary>
     /// <param name="projectName">Name of the project</param>
     /// <returns></returns>
-    private IfcStore CreateandInitModel(string projectName)
+    private IfcStore CreateAndInitModel(string projectName)
     {
         //first we need to set up some credentials for ownership of data in the new model
         var credentials = new XbimEditorCredentials
@@ -183,10 +157,10 @@ internal class WallService
     /// <returns></returns>
     private IfcWallStandardCase CreateWall(IfcStore store, double length, double width, double height)
     {
-        //
         //begin a transaction
         using (var txn = store.BeginTransaction("Create Wall"))
         {
+            //创建墙体实例
             var wall = store.Instances.New<IfcWallStandardCase>();
             wall.Name = "A Standard rectangular wall";
 
@@ -238,7 +212,6 @@ internal class WallService
             lp.RelativePlacement = ax3D;
             wall.ObjectPlacement = lp;
 
-
             // Where Clause: The IfcWallStandard relies on the provision of an IfcMaterialLayerSetUsage 
             var ifcMaterialLayerSetUsage = store.Instances.New<IfcMaterialLayerSetUsage>();
             var ifcMaterialLayerSet = store.Instances.New<IfcMaterialLayerSet>();
@@ -262,7 +235,6 @@ internal class WallService
             var ifcPresentationLayerAssignment = store.Instances.New<IfcPresentationLayerAssignment>();
             ifcPresentationLayerAssignment.Name = "some ifcPresentationLayerAssignment";
             ifcPresentationLayerAssignment.AssignedItems.Add(shape);
-
 
             // linear segment as IfcPolyline with two points is required for IfcWall
             var ifcPolyline = store.Instances.New<IfcPolyline>();
@@ -346,8 +318,24 @@ internal class WallService
             });
         });
 
-        var definingValues = new List<IfcReal> { new IfcReal(100.0), new IfcReal(200.0), new IfcReal(400.0), new IfcReal(800.0), new IfcReal(1600.0), new IfcReal(3200.0), };
-        var definedValues = new List<IfcReal> { new IfcReal(20.0), new IfcReal(42.0), new IfcReal(46.0), new IfcReal(56.0), new IfcReal(60.0), new IfcReal(65.0), };
+        var definingValues = new List<IfcReal>
+        {
+            new IfcReal(100.0),
+            new IfcReal(200.0),
+            new IfcReal(400.0),
+            new IfcReal(800.0),
+            new IfcReal(1600.0),
+            new IfcReal(3200.0),
+        };
+        var definedValues = new List<IfcReal>
+        {
+            new IfcReal(20.0),
+            new IfcReal(42.0),
+            new IfcReal(46.0),
+            new IfcReal(56.0),
+            new IfcReal(60.0),
+            new IfcReal(65.0),
+        };
         var ifcPropertyTableValue = model.Instances.New<IfcPropertyTableValue>(ptv =>
         {
             ptv.Name = "IfcPropertyTableValue:Sound";
@@ -374,11 +362,17 @@ internal class WallService
                 cd.UnitType = IfcUnitEnum.FREQUENCYUNIT;
                 cd.Name = "dB";
             });
-
-
         });
 
-        var listValues = new List<IfcLabel> { new IfcLabel("Red"), new IfcLabel("Green"), new IfcLabel("Blue"), new IfcLabel("Pink"), new IfcLabel("White"), new IfcLabel("Black"), };
+        var listValues = new List<IfcLabel>
+        {
+            new IfcLabel("Red"),
+            new IfcLabel("Green"),
+            new IfcLabel("Blue"),
+            new IfcLabel("Pink"),
+            new IfcLabel("White"),
+            new IfcLabel("Black"),
+        };
         var ifcPropertyListValue = model.Instances.New<IfcPropertyListValue>(plv =>
         {
             plv.Name = "IfcPropertyListValue:Colours";
@@ -554,7 +548,6 @@ internal class WallService
                     siu.Prefix = IfcSIPrefix.MILLI;
                     siu.Name = IfcSIUnitName.METRE;
                 });
-
             });
             cbu.Dimensions = model.Instances.New<IfcDimensionalExponents>(de =>
             {

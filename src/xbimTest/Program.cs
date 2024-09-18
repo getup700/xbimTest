@@ -30,7 +30,7 @@ class Program
             EditorsGivenName = "Omar",
             EditorsOrganisationName = "Stark"
         });
-        services.AddSingleton<WallService>();
+        services.AddSingleton<SimpleProjectService>();
         services.AddSingleton<DemoService>();
         services.AddSingleton<LinqService>();
         services.AddSingleton<TransferService>();
@@ -67,8 +67,6 @@ class Program
         var projectHierarchyService = provider.GetService<ProjectHierarchyService>();
         //projectHierarchyService.Show(path);
 
-        var wallService = provider.GetService<WallService>();
-        wallService.BuildNewProject(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "newProject.ifc"));
 
     }
 }
